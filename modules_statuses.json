@@ -1,0 +1,10 @@
+{
+    "Auth": true,
+    "Workspaces": true,
+    "Connections": true,
+    "Ingestion": true,
+    "Analytics": true,
+    "Dashboard": true,
+    "Reports": true,
+    "Notifications": true
+}

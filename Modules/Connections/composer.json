@@ -1,0 +1,30 @@
+{
+    "name": "nwidart/connections",
+    "description": "",
+    "authors": [
+        {
+            "name": "Nicolas Widart",
+            "email": "n.widart@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Connections\\": "app/",
+            "Modules\\Connections\\Database\\Factories\\": "database/factories/",
+            "Modules\\Connections\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\Connections\\Tests\\": "tests/"
+        }
+    }
+}
