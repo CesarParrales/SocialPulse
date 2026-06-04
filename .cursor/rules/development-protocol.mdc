@@ -1,0 +1,68 @@
+---
+description: Protocolo de desarrollo SocialPulse — skills obligatorias y fuente de verdad del producto
+alwaysApply: true
+---
+
+# Protocolo de desarrollo — SocialPulse
+
+## Fuente de verdad
+
+- **PRD:** `socialpulse-prd.md` — alcance MVP, ADRs, modelo de datos, riesgos API.
+- Ante conflicto entre código y PRD, **el PRD manda** hasta que se documente un cambio explícito.
+
+## Regla de skills (obligatoria)
+
+Antes de planificar, implementar, revisar o desplegar, **leer la skill aplicable** (`SKILL.md` + referencias si existen). No improvisar flujos que ya están definidos en una skill.
+
+| Contexto | Skill |
+|----------|-------|
+| SDLC completo, arquitectura, planificación, seguridad, CI/CD, QA, deploy | `software-engineering-sdlc` |
+| Módulos Laravel (nwidart), estructura monolito modular | `laravel-modular` |
+| Código nuevo o refactor (evitar sobre-ingeniería) | `karpathy-guidelines` |
+| UI React/Inertia, componentes, dashboards | `vercel-react-best-practices` |
+| Estructura de componentes (atoms → pages) | `atomic-design` |
+| UX, flujos, accesibilidad, implementación UI | `analisis-ux-implementacion-ui` |
+| Pulido visual, motion, estados | `emil-design-eng` |
+| Revisión de compliance UI (forms, a11y, focus) | `web-interface-guidelines` |
+| Cierre de feature, pre/post deploy, validación producción | `comprobacion-produccion` |
+| Revisión de seguridad explícita (OAuth, tokens, OWASP) | `security-best-practices` |
+
+Todas viven en **`.cursor/skills/<nombre>/`** (versionadas en el repo).
+
+Si la tarea cruza varias filas, cargar **todas** las skills relevantes (ej. módulo Laravel + dashboard → `laravel-modular` + `vercel-react-best-practices` + `software-engineering-sdlc` fase correspondiente).
+
+## Flujo mínimo por tarea
+
+1. Confirmar alcance contra `socialpulse-prd.md` (P0 vs Fase 2/3).
+2. Leer skill(s) del mapa anterior.
+3. Para SDLC: cargar la referencia de fase en `software-engineering-sdlc/references/` (01–10).
+4. Implementar con diff mínimo; respetar stack del PRD (Laravel 11, Inertia+React, PostgreSQL, Redis, Horizon).
+5. Al terminar un módulo o feature P0: aplicar `comprobacion-produccion`.
+
+## Restricciones del producto (no negociables)
+
+- Meta Stories: captura activa cada 6h; sin histórico previo a conexión.
+- Tokens OAuth: cifrados en BD (AES-256), nunca en env ni git.
+- Calls a Meta/Google: solo vía capa de servicio, nunca desde controllers.
+- Benchmark industria: no mostrar hasta n≥30 por segmento.
+- Sin scraping ni plataformas sin API oficial.
+
+## Skills instaladas en el repo
+
+```
+.cursor/skills/
+├── software-engineering-sdlc/
+├── laravel-modular/
+├── karpathy-guidelines/
+├── vercel-react-best-practices/
+├── atomic-design/
+├── analisis-ux-implementacion-ui/
+├── emil-design-eng/
+├── web-interface-guidelines/
+├── comprobacion-produccion/
+└── security-best-practices/
+```
+
+## Escalación
+
+Si falta una skill para un dominio recurrente del proyecto, copiarla a `.cursor/skills/` y actualizar esta regla antes de continuar.
