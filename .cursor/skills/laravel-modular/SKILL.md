@@ -1,17 +1,21 @@
 ---
 name: laravel-modular
 description: >
-  Guía experta para crear y estructurar módulos en Laravel 11+ con arquitectura modular usando nwidart/laravel-modules.
-  Usa esta skill SIEMPRE que el usuario mencione: desarrollo modular en Laravel, crear módulos Laravel, arquitectura de módulos,
-  nwidart/laravel-modules, laravel-modules, DDD en Laravel, módulos Laravel 11, separar funcionalidades en Laravel,
-  modularizar aplicación Laravel, o cualquier tarea de scaffold/generación de código dentro de módulos Laravel.
-  También activa esta skill cuando pregunten cómo organizar un proyecto Laravel grande, separar dominios, o estructurar
-  un monolito modular en PHP/Laravel.
+  Guía experta para crear y estructurar módulos en Laravel (versión del proyecto; SocialPulse: 13+)
+  con arquitectura modular usando nwidart/laravel-modules.
+  Usa esta skill SIEMPRE que el usuario mencione: desarrollo modular en Laravel, crear módulos Laravel,
+  arquitectura de módulos, nwidart/laravel-modules, laravel-modules, DDD en Laravel, módulos Laravel,
+  separar funcionalidades en Laravel, modularizar aplicación Laravel, o cualquier tarea de scaffold/generación
+  de código dentro de módulos Laravel. También activa cuando pregunten cómo organizar un proyecto Laravel
+  grande, separar dominios, o estructurar un monolito modular en PHP/Laravel.
 ---
 
 # Laravel Modular Development Skill
 
-Skill para guiar el diseño, creación y mantenimiento de módulos en **Laravel 11+** con `nwidart/laravel-modules`.
+Skill para guiar el diseño, creación y mantenimiento de módulos en **Laravel del proyecto**
+(SocialPulse: **13+**, `nwidart/laravel-modules` ^13) con arquitectura modular.
+
+**Versiones:** leer `composer.json` antes de scaffold; no asumir Laravel 11.
 
 ## Cuándo aplica esta skill
 
@@ -23,7 +27,7 @@ Skill para guiar el diseño, creación y mantenimiento de módulos en **Laravel 
 
 ---
 
-## 1. Instalación y configuración (Laravel 11+)
+## 1. Instalación y configuración (Laravel actual)
 
 ```bash
 composer require nwidart/laravel-modules wikimedia/composer-merge-plugin
@@ -44,7 +48,8 @@ php artisan vendor:publish --provider="Nwidart\Modules\LaravelModulesServiceProv
     }
 }
 ```
-> **Laravel 11+**: La línea `"Modules\\": "modules/"` ya NO es necesaria en `composer.json` si usas la versión ≥11 del paquete. Usa solo el merge-plugin.
+> **Laravel reciente + nwidart ^13:** La carpeta de módulos es `Modules/` (PascalCase).
+> Usa el merge-plugin; verifica autoload en `composer.json` del repo antes de cambiar rutas.
 
 ```bash
 composer dump-autoload

@@ -1,3 +1,41 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+    :root {
+        --sp-primary: 109 40 217;
+        --sp-primary-hover: 91 33 182;
+        --sp-accent: 236 72 153;
+        --sp-sidebar: 11 18 32;
+        --sp-sidebar-hover: 30 41 59;
+        --sp-surface: 244 245 247;
+        --sp-border: 226 232 240;
+    }
+
+    body {
+        @apply bg-sp-surface text-sp-ink antialiased;
+    }
+}
+
+@layer components {
+    .sp-card {
+        @apply rounded-xl border border-sp-border bg-white shadow-sm;
+    }
+
+    .sp-link {
+        @apply text-sp-primary hover:text-sp-primary-hover font-medium transition-colors;
+    }
+
+    .sp-input {
+        @apply rounded-lg border-sp-border shadow-sm focus:border-sp-primary focus:ring-sp-primary;
+    }
+
+    .sp-gradient-text {
+        @apply bg-gradient-to-r from-sp-primary to-sp-accent bg-clip-text text-transparent;
+    }
+
+    .sp-gradient-bg {
+        @apply bg-gradient-to-br from-sp-primary via-violet-600 to-sp-accent;
+    }
+}

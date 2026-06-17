@@ -1,8 +1,10 @@
 # SocialPulse — Product Requirements Document
-**Versión:** 1.0  
+**Versión:** 1.1  
 **Estado:** Draft para revisión técnica  
 **Autor:** Product Owner  
-**Última actualización:** Junio 2026
+**Última actualización:** Junio 2026  
+
+**Cambios v1.1:** Stack de §5.1 alineado con `composer.json`, `package.json` y `context.md` (Laravel 13, React 19, nwidart ^13). Versiones exactas viven en manifests del repo.
 
 ---
 
@@ -349,16 +351,22 @@ PRIORIDAD: P0
 
 ### 5.1 Stack Seleccionado
 
+> **Fuente de versiones:** `composer.json` y `package.json` mandan sobre este documento.
+> Snapshot operativo en `context.md`. Política suite: `.cursor/skills/laravel-backend/references/stack-versions.md`.
+
 | Capa | Tecnología | Justificación |
 |---|---|---|
-| **Backend** | Laravel 11 | Queue system nativo, Horizon para jobs, ecosistema maduro, velocidad de desarrollo |
-| **Frontend** | React + Inertia.js | SPA sin API separada, SSR donde aplique, componentes reutilizables |
+| **Backend** | Laravel 13, PHP ^8.3 | Queue system nativo, Horizon para jobs, ecosistema maduro, velocidad de desarrollo |
+| **Arquitectura modular** | `nwidart/laravel-modules` ^13 | Monolito modular por dominio (`Modules/*`); merge-plugin por módulo |
+| **Frontend** | React 19 + Inertia.js 2 + TypeScript + Vite 8 + Tailwind 3 | SPA sin API separada para el producto web; componentes reutilizables |
+| **Auth / RBAC** | Laravel Breeze + Sanctum + Spatie Permission | Sesiones web, tokens futuros para API móvil; roles por workspace |
 | **Base de datos principal** | PostgreSQL | Queries complejas de analytics, JSON columns para raw data flexible |
 | **Cache / Queue** | Redis | Jobs de ingesta, cache de dashboards, sesiones |
 | **Queue monitoring** | Laravel Horizon | Visibilidad de jobs de ingesta, reintentos, alertas de fallo |
 | **Jobs scheduler** | Laravel Scheduler + Supervisor | Cron jobs para ingesta diaria y Stories watcher |
 | **Storage** | AWS S3 / Cloudflare R2 | Thumbnails de contenido, exports PDF |
-| **Generación PDF** | Browsershot (Puppeteer) | Reportes de alta calidad desde HTML/CSS |
+| **Generación PDF** | Browsershot (Puppeteer) + PhpSpreadsheet | Reportes de alta calidad desde HTML/CSS; anexos CSV/Excel |
+| **Observabilidad** | Sentry + `/health` | Errores en producción; health checks para deploy |
 | **Servidor** | DigitalOcean / Hetzner (VPS) | Costo-efectivo para MVP. Migrar a AWS si escala lo exige |
 | **CI/CD** | GitHub Actions | Deploy automatizado a staging y producción |
 

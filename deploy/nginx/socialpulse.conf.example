@@ -1,0 +1,60 @@
+# SocialPulse — Nginx + PHP-FPM (ejemplo)
+# Copiar a /etc/nginx/sites-available/socialpulse
+# sudo ln -s /etc/nginx/sites-available/socialpulse /etc/nginx/sites-enabled/
+# sudo nginx -t && sudo systemctl reload nginx
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name app.socialpulse.app;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name app.socialpulse.app;
+
+    root /var/www/socialpulse/public;
+    index index.php;
+
+    # ssl_certificate /etc/letsencrypt/live/app.socialpulse.app/fullchain.pem;
+    # ssl_certificate_key /etc/letsencrypt/live/app.socialpulse.app/privkey.pem;
+
+    add_header X-Frame-Options "SAMEORIGIN";
+    add_header X-Content-Type-Options "nosniff";
+
+    charset utf-8;
+    client_max_body_size 32M;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+    location = /robots.txt  { access_log off; log_not_found off; }
+
+    error_page 404 /index.php;
+
+    location ~ \.php$ {
+        fastcgi_pass unix:/var/run/php/php8.4-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        include fastcgi_params;
+        fastcgi_hide_header X-Powered-By;
+    }
+
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
+
+    # Health checks (uptime monitor)
+    location = /up {
+        access_log off;
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location = /health {
+        access_log off;
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+}

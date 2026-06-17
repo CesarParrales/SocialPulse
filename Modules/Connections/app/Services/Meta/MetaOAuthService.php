@@ -5,20 +5,26 @@ namespace Modules\Connections\Services\Meta;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Modules\Connections\Enums\ConnectionStatus;
+use Modules\Connections\Enums\MetaAuthMode;
 use Modules\Connections\Enums\Platform;
 use Modules\Connections\Models\PlatformConnection;
+use Modules\Settings\Services\IntegrationConfigResolver;
 use Modules\Workspaces\Models\Workspace;
 use RuntimeException;
 
 class MetaOAuthService
 {
+    public function __construct(
+        private readonly IntegrationConfigResolver $configResolver,
+    ) {}
+
     public function authorizationUrl(Workspace $workspace, int $userId): string
     {
-        $config = config('connections.meta');
+        $config = $this->configResolver->meta($workspace->agency_id);
 
         $query = http_build_query([
             'client_id' => $config['app_id'],
-            'redirect_uri' => $this->redirectUri(),
+            'redirect_uri' => $this->redirectUri($config),
             'state' => $this->encodeState($workspace->id, $userId),
             'scope' => implode(',', $config['scopes']),
             'response_type' => 'code',
@@ -46,8 +52,8 @@ class MetaOAuthService
 
     public function connect(Workspace $workspace, string $code): PlatformConnection
     {
-        $shortLived = $this->exchangeCodeForToken($code);
-        $longLived = $this->exchangeForLongLivedToken($shortLived['access_token']);
+        $shortLived = $this->exchangeCodeForToken($workspace, $code);
+        $longLived = $this->refreshLongLivedToken($workspace, $shortLived['access_token']);
 
         return PlatformConnection::query()->updateOrCreate(
             [
@@ -61,6 +67,7 @@ class MetaOAuthService
                 'status' => ConnectionStatus::Active,
                 'external_account_id' => $shortLived['user_id'] ?? null,
                 'metadata' => [
+                    'auth_mode' => MetaAuthMode::UserOAuth->value,
                     'token_type' => $longLived['token_type'] ?? 'bearer',
                 ],
             ],
@@ -70,32 +77,38 @@ class MetaOAuthService
     /**
      * @return array{access_token: string, user_id?: string, expires_in?: int, token_type?: string}
      */
-    private function exchangeCodeForToken(string $code): array
+    private function exchangeCodeForToken(Workspace $workspace, string $code): array
     {
-        $config = config('connections.meta');
+        $config = $this->configResolver->meta($workspace->agency_id);
 
-        $response = Http::timeout(30)
-            ->get($this->graphUrl('oauth/access_token'), [
+        return Http::timeout(30)
+            ->get($this->graphUrl($config, 'oauth/access_token'), [
                 'client_id' => $config['app_id'],
                 'client_secret' => $config['app_secret'],
-                'redirect_uri' => $this->redirectUri(),
+                'redirect_uri' => $this->redirectUri($config),
                 'code' => $code,
             ])
             ->throw()
             ->json();
-
-        return $response;
     }
 
     /**
      * @return array{access_token: string, expires_in?: int, token_type?: string}
      */
-    private function exchangeForLongLivedToken(string $shortLivedToken): array
+    public function refreshLongLivedToken(Workspace $workspace, string $accessToken): array
     {
-        $config = config('connections.meta');
+        return $this->exchangeForLongLivedToken($workspace, $accessToken);
+    }
+
+    /**
+     * @return array{access_token: string, expires_in?: int, token_type?: string}
+     */
+    private function exchangeForLongLivedToken(Workspace $workspace, string $shortLivedToken): array
+    {
+        $config = $this->configResolver->meta($workspace->agency_id);
 
         return Http::timeout(30)
-            ->get($this->graphUrl('oauth/access_token'), [
+            ->get($this->graphUrl($config, 'oauth/access_token'), [
                 'grant_type' => 'fb_exchange_token',
                 'client_id' => $config['app_id'],
                 'client_secret' => $config['app_secret'],
@@ -114,16 +127,19 @@ class MetaOAuthService
         ]);
     }
 
-    private function redirectUri(): string
+    /**
+     * @param  array<string, mixed>  $config
+     */
+    private function redirectUri(array $config): string
     {
-        return config('connections.meta.redirect_uri')
-            ?? url('/connections/meta/callback');
+        return $config['redirect_uri'] ?? url('/connections/meta/callback');
     }
 
-    private function graphUrl(string $path): string
+    /**
+     * @param  array<string, mixed>  $config
+     */
+    private function graphUrl(array $config, string $path): string
     {
-        $version = config('connections.meta.api_version');
-
-        return 'https://graph.facebook.com/'.$version.'/'.$path;
+        return 'https://graph.facebook.com/'.$config['api_version'].'/'.$path;
     }
 }

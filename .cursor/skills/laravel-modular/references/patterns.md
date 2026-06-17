@@ -196,7 +196,7 @@ class ProductResource extends JsonResource
                 'formatted'=> '$' . number_format($this->price, 2),
             ],
             'stock'      => $this->stock,
-            'status'     => $this->status->label(), // enum Laravel 11
+            'status'     => $this->status->label(), // enum nativo PHP
             'created_at' => $this->created_at->toISOString(),
             'links'      => [
                 'self' => route('products.show', $this->id),
@@ -208,7 +208,7 @@ class ProductResource extends JsonResource
 
 ---
 
-## Módulo con Enums (Laravel 11)
+## Módulo con Enums (PHP nativo)
 
 ```php
 // Modules/Orders/app/Enums/OrderStatus.php

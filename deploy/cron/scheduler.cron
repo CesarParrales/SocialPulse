@@ -1,0 +1,5 @@
+# SocialPulse — Laravel Scheduler
+# Instalar: sudo crontab -u www-data -e
+# Pegar la línea siguiente (ajustar ruta del proyecto):
+
+* * * * * cd /var/www/socialpulse && php artisan schedule:run >> /dev/null 2>&1

@@ -2,9 +2,13 @@
 
 namespace Modules\Connections\Providers;
 
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\Gate;
+use Modules\Connections\Jobs\DispatchTokenRefreshJob;
 use Modules\Connections\Models\PlatformConnection;
 use Modules\Connections\Policies\PlatformConnectionPolicy;
+use Modules\Connections\Services\Google\GoogleTokenRefreshService;
+use Modules\Connections\Services\PlatformTokenRefreshService;
 use Nwidart\Modules\Support\ModuleServiceProvider;
 
 class ConnectionsServiceProvider extends ModuleServiceProvider
@@ -43,13 +47,20 @@ class ConnectionsServiceProvider extends ModuleServiceProvider
         RouteServiceProvider::class,
     ];
 
-    /**
-     * Define module schedules.
-     *
-     * @param  $schedule
-     */
-    // protected function configureSchedules(Schedule $schedule): void
-    // {
-    //     $schedule->command('inspire')->hourly();
-    // }
+    public function register(): void
+    {
+        parent::register();
+
+        $this->app->singleton(GoogleTokenRefreshService::class);
+        $this->app->singleton(PlatformTokenRefreshService::class);
+    }
+
+    protected function configureSchedules(Schedule $schedule): void
+    {
+        $schedule->job(new DispatchTokenRefreshJob)
+            ->dailyAt('05:00')
+            ->timezone('UTC')
+            ->name('connections:token-refresh')
+            ->withoutOverlapping();
+    }
 }

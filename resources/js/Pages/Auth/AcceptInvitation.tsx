@@ -1,10 +1,18 @@
+import AuthFormHeader from '@/Components/UI/AuthFormHeader';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
+import { useTranslation } from '@/lib/i18n';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, useForm } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
+
+const roleLabels: Record<string, string> = {
+    agency_admin: 'workspaces.member_role_agency_admin',
+    operator: 'workspaces.member_role_operator',
+    client_readonly: 'workspaces.member_role_client',
+};
 
 export default function AcceptInvitation({
     email,
@@ -17,6 +25,12 @@ export default function AcceptInvitation({
     role: string;
     token: string;
 }) {
+    const { t } = useTranslation();
+
+    const roleLabel = t(
+        roleLabels[role] ?? 'workspaces.member_role_operator',
+    );
+
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
         password: '',
@@ -32,27 +46,31 @@ export default function AcceptInvitation({
 
     return (
         <GuestLayout>
-            <Head title="Aceptar invitación" />
+            <Head title={t('auth.invitation_title')} />
 
-            <div className="mb-4 text-sm text-gray-600">
-                Te unes a <strong>{agencyName}</strong> como{' '}
-                <strong>{role.replace('_', ' ')}</strong>.
-            </div>
+            <AuthFormHeader title={t('auth.invitation_title')} />
+
+            <p className="mb-6 text-sm text-sp-muted">
+                {t('auth.invitation_intro', {
+                    agency: agencyName,
+                    role: roleLabel,
+                })}
+            </p>
 
             <form onSubmit={submit}>
                 <div>
-                    <InputLabel htmlFor="email" value="Correo" />
+                    <InputLabel htmlFor="email" value={t('common.email')} />
                     <TextInput
                         id="email"
                         type="email"
-                        className="mt-1 block w-full bg-gray-100"
+                        className="mt-1 block w-full bg-sp-surface"
                         value={email}
                         disabled
                     />
                 </div>
 
                 <div className="mt-4">
-                    <InputLabel htmlFor="name" value="Nombre" />
+                    <InputLabel htmlFor="name" value={t('common.name')} />
                     <TextInput
                         id="name"
                         className="mt-1 block w-full"
@@ -65,7 +83,7 @@ export default function AcceptInvitation({
                 </div>
 
                 <div className="mt-4">
-                    <InputLabel htmlFor="password" value="Contraseña" />
+                    <InputLabel htmlFor="password" value={t('auth.password')} />
                     <TextInput
                         id="password"
                         type="password"
@@ -80,7 +98,7 @@ export default function AcceptInvitation({
                 <div className="mt-4">
                     <InputLabel
                         htmlFor="password_confirmation"
-                        value="Confirmar contraseña"
+                        value={t('auth.password_confirm')}
                     />
                     <TextInput
                         id="password_confirmation"
@@ -100,7 +118,7 @@ export default function AcceptInvitation({
 
                 <div className="mt-6 flex items-center justify-end">
                     <PrimaryButton disabled={processing}>
-                        Crear cuenta
+                        {t('auth.create_account')}
                     </PrimaryButton>
                 </div>
             </form>

@@ -5,6 +5,7 @@ namespace Modules\Workspaces\Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Modules\Dashboard\Database\Seeders\DemoAnalyticsSeeder;
 use Modules\Workspaces\Enums\AgencyPlan;
 use Modules\Workspaces\Enums\SystemRole;
 use Modules\Workspaces\Enums\WorkspaceMemberRole;
@@ -75,5 +76,22 @@ class DemoSeeder extends Seeder
         $operator->workspaces()->sync([
             $workspaceA->id => ['role' => WorkspaceMemberRole::Operator->value],
         ]);
+
+        $client = User::query()->updateOrCreate(
+            ['email' => 'cliente@agenciademo.test'],
+            [
+                'name' => 'Cliente Demo',
+                'password' => Hash::make('password'),
+                'agency_id' => $agency->id,
+                'email_verified_at' => now(),
+            ],
+        );
+        $client->syncRoles([SystemRole::ClientReadonly->value]);
+
+        $client->workspaces()->sync([
+            $workspaceA->id => ['role' => WorkspaceMemberRole::ClientReadonly->value],
+        ]);
+
+        $this->call(DemoAnalyticsSeeder::class);
     }
 }

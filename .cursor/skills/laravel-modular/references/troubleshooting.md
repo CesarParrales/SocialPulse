@@ -26,7 +26,7 @@ También verificar `composer.json`:
 }
 ```
 
-> Nota de consistencia: en esta guía, para Laravel 11+ se prioriza el uso del merge-plugin del paquete modular.
+> Nota de consistencia: en SocialPulse (Laravel 13) se usa merge-plugin y `Modules/` en PascalCase.
 
 ---
 

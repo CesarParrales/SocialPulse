@@ -70,6 +70,25 @@ class MetaConnectionTest extends TestCase
         $this->assertSame(Platform::Meta, $connection->platform);
         $this->assertSame('long-token', $connection->access_token);
         $this->assertSame(ConnectionStatus::Active, $connection->status);
+        $this->assertSame('user_oauth', $connection->metadata['auth_mode'] ?? null);
+    }
+
+    public function test_meta_callback_shows_oauth_error_when_user_denies(): void
+    {
+        [$workspace, $admin] = $this->agencyAdminContext();
+
+        $state = app(MetaOAuthService::class)->authorizationUrl($workspace, $admin->id);
+        parse_str(parse_url($state, PHP_URL_QUERY), $query);
+        $stateToken = $query['state'];
+
+        $this->actingAs($admin)
+            ->get(route('connections.meta.callback', [
+                'error' => 'access_denied',
+                'error_description' => 'Permissions error',
+                'state' => $stateToken,
+            ]))
+            ->assertRedirect(route('workspaces.connections.index', $workspace))
+            ->assertSessionHasErrors('oauth');
     }
 
     public function test_asset_cannot_be_monitored_in_two_workspaces(): void

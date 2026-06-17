@@ -3,6 +3,10 @@
 namespace Modules\Reports\Providers;
 
 use Illuminate\Console\Scheduling\Schedule;
+use Modules\Reports\Contracts\ReportPdfGenerator;
+use Modules\Reports\Services\BrowsershotReportPdfGenerator;
+use Modules\Reports\Services\FakeReportPdfGenerator;
+use Modules\Reports\Services\ReportDataAssembler;
 use Nwidart\Modules\Support\ModuleServiceProvider;
 
 class ReportsServiceProvider extends ModuleServiceProvider
@@ -33,6 +37,21 @@ class ReportsServiceProvider extends ModuleServiceProvider
         EventServiceProvider::class,
         RouteServiceProvider::class,
     ];
+
+    public function register(): void
+    {
+        parent::register();
+
+        $this->app->singleton(ReportDataAssembler::class);
+
+        $this->app->bind(ReportPdfGenerator::class, function ($app) {
+            if ($app->environment('testing')) {
+                return new FakeReportPdfGenerator;
+            }
+
+            return new BrowsershotReportPdfGenerator;
+        });
+    }
 
     /**
      * Define module schedules.

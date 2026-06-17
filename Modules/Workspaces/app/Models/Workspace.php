@@ -14,15 +14,25 @@ class Workspace extends Model
         'agency_id',
         'name',
         'industry_category',
+        'region',
         'timezone',
         'settings',
+        'public_dashboard_token',
+        'public_dashboard_enabled_at',
     ];
 
     protected function casts(): array
     {
         return [
             'settings' => 'array',
+            'public_dashboard_enabled_at' => 'datetime',
         ];
+    }
+
+    public function isPublicDashboardEnabled(): bool
+    {
+        return $this->public_dashboard_token !== null
+            && $this->public_dashboard_enabled_at !== null;
     }
 
     public function agency(): BelongsTo

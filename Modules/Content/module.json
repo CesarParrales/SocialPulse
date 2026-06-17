@@ -1,0 +1,11 @@
+{
+    "name": "Content",
+    "alias": "content",
+    "description": "Editorial calendar, drafts and approval workflow",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Content\\Providers\\ContentServiceProvider"
+    ],
+    "files": []
+}

@@ -8,10 +8,11 @@
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+        <link href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700&display=swap" rel="stylesheet" />
 
         <!-- Scripts -->
-        @routes
+        {{-- PHP explícito: evita que `view:cache` deje literal "@routes" si la directiva Ziggy no estaba registrada --}}
+        @php echo app(\Tighten\Ziggy\BladeRouteGenerator::class)->generate(); @endphp
         @viteReactRefresh
         @vite(['resources/js/app.tsx', "resources/js/Pages/{$page['component']}.tsx"])
         @inertiaHead

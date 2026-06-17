@@ -3,54 +3,44 @@
 namespace Modules\Notifications\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
+use Modules\Notifications\Support\NotificationPresenter;
 
 class NotificationsController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(Request $request): Response
     {
-        return view('notifications::index');
+        $notifications = $request->user()
+            ->notifications()
+            ->latest()
+            ->paginate(20)
+            ->through(fn ($notification) => NotificationPresenter::from($notification));
+
+        return Inertia::render('Notifications/Index', [
+            'notifications' => $notifications,
+            'unread_count' => $request->user()->unreadNotifications()->count(),
+        ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function markRead(Request $request, string $notification): RedirectResponse
     {
-        return view('notifications::create');
+        $record = $request->user()
+            ->notifications()
+            ->whereKey($notification)
+            ->firstOrFail();
+
+        $record->markAsRead();
+
+        return back();
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request) {}
-
-    /**
-     * Show the specified resource.
-     */
-    public function show($id)
+    public function markAllRead(Request $request): RedirectResponse
     {
-        return view('notifications::show');
+        $request->user()->unreadNotifications->markAsRead();
+
+        return back()->with('success', __('app.notifications.all_read'));
     }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit($id)
-    {
-        return view('notifications::edit');
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, $id) {}
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy($id) {}
 }

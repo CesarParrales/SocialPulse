@@ -12,6 +12,13 @@
             <directory>tests/Feature</directory>
             <directory>Modules/Workspaces/tests/Feature</directory>
             <directory>Modules/Connections/tests/Feature</directory>
+            <directory>Modules/Ingestion/tests/Feature</directory>
+            <directory>Modules/Notifications/tests/Feature</directory>
+            <directory>Modules/Dashboard/tests/Feature</directory>
+            <directory>Modules/Analytics/tests/Feature</directory>
+            <directory>Modules/Reports/tests/Feature</directory>
+            <directory>Modules/Settings/tests/Feature</directory>
+            <directory>Modules/Content/tests/Feature</directory>
         </testsuite>
     </testsuites>
     <source>

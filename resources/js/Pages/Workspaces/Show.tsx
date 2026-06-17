@@ -1,27 +1,56 @@
+import PrimaryButton from '@/Components/PrimaryButton';
+import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, useForm, usePage } from '@inertiajs/react';
-import { FormEventHandler } from 'react';
+import Card from '@/Components/UI/Card';
+import EmptyState from '@/Components/UI/EmptyState';
+import FlashAlert from '@/Components/UI/FlashAlert';
+import OnboardingChecklist, {
+    OnboardingStep,
+} from '@/Components/UI/OnboardingChecklist';
+import StatusBadge from '@/Components/UI/StatusBadge';
+import WorkspacePerformanceSnapshot, {
+    PerformanceSnapshot,
+} from '@/Components/Workspaces/WorkspacePerformanceSnapshot';
+import WorkspaceLayout from '@/Components/Templates/WorkspaceLayout';
+import { useTranslation } from '@/lib/i18n';
+import { Link, useForm, usePage } from '@inertiajs/react';
+import { FormEventHandler, useMemo } from 'react';
 import { PageProps, Workspace } from '@/types';
+
+type SetupPayload = {
+    complete: boolean;
+    steps: Array<{ key: string; done: boolean; href: string | null }>;
+};
 
 export default function Show({
     workspace,
     canAssignMembers,
-    assignableOperators,
+    assignableMembers,
     memberRoles,
+    stats,
+    setup,
+    performanceSnapshot,
 }: PageProps<{
     workspace: Workspace;
     canAssignMembers: boolean;
-    assignableOperators: Array<{ id: number; name: string; email: string }>;
+    assignableMembers: Array<{ id: number; name: string; email: string }>;
     memberRoles: Array<{ value: string; label: string }>;
+    stats: {
+        connections_count: number;
+        connected_assets_count: number;
+        members_count: number;
+    };
+    setup: SetupPayload;
+    performanceSnapshot: PerformanceSnapshot;
 }>) {
+    const { t } = useTranslation();
     const { flash } = usePage().props;
 
     const { data, setData, post, processing, errors, reset } = useForm({
-        email: assignableOperators[0]?.email ?? '',
+        email: '',
         role: memberRoles[0]?.value ?? 'operator',
+        invite: false,
     });
 
     const submit: FormEventHandler = (e) => {
@@ -31,124 +60,183 @@ export default function Show({
         });
     };
 
-    return (
-        <AuthenticatedLayout
-            header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                    {workspace.name}
-                </h2>
-            }
-        >
-            <Head title={workspace.name} />
+    const roleLabel = (role: string) =>
+        memberRoles.find((item) => item.value === role)?.label ?? role;
 
-            <div className="py-12">
-                <div className="mx-auto max-w-4xl space-y-6 sm:px-6 lg:px-8">
-                    {flash.success && (
-                        <div className="rounded-md bg-green-50 p-4 text-sm text-green-800">
-                            {flash.success}
-                        </div>
+    const setupSteps: OnboardingStep[] = useMemo(
+        () =>
+            setup.steps.map((step) => ({
+                key: step.key,
+                done: step.done,
+                href: step.href ?? undefined,
+                label: t(`workspaces.setup_steps.${step.key}.label`),
+                description: t(`workspaces.setup_steps.${step.key}.description`),
+            })),
+        [setup.steps, t],
+    );
+
+    return (
+        <WorkspaceLayout
+            headTitle={workspace.name}
+            title={workspace.name}
+            description={workspace.agency?.name ?? undefined}
+            workspace={workspace}
+            active="overview"
+        >
+                <div className="space-y-6">
+                    {flash.success && <FlashAlert message={flash.success} />}
+
+                    <div className="grid gap-4 sm:grid-cols-3">
+                        <StatCard
+                            label={t('workspaces.stat_connections')}
+                            value={stats.connections_count}
+                        />
+                        <StatCard
+                            label={t('workspaces.stat_assets')}
+                            value={stats.connected_assets_count}
+                            highlight={stats.connected_assets_count === 0}
+                        />
+                        <StatCard
+                            label={t('workspaces.stat_members')}
+                            value={stats.members_count}
+                        />
+                    </div>
+
+                    {!setup.complete && (
+                        <OnboardingChecklist
+                            title={t('workspaces.setup_title')}
+                            completeMessage={t('workspaces.setup_complete')}
+                            steps={setupSteps}
+                        />
                     )}
 
-                    <div className="overflow-hidden bg-white p-6 shadow-sm sm:rounded-lg">
+                    <WorkspacePerformanceSnapshot
+                        workspaceId={workspace.id}
+                        snapshot={performanceSnapshot}
+                    />
+
+                    <Card>
                         <dl className="grid gap-4 sm:grid-cols-2">
                             <div>
-                                <dt className="text-sm text-gray-500">
-                                    Agencia
+                                <dt className="text-sm text-sp-muted">
+                                    {t('common.agency')}
                                 </dt>
-                                <dd className="font-medium text-gray-900">
+                                <dd className="font-medium text-sp-ink">
                                     {workspace.agency?.name}
                                 </dd>
                             </div>
                             <div>
-                                <dt className="text-sm text-gray-500">
-                                    Zona horaria
+                                <dt className="text-sm text-sp-muted">
+                                    {t('common.timezone')}
                                 </dt>
-                                <dd className="font-medium text-gray-900">
+                                <dd className="font-medium text-sp-ink">
                                     {workspace.timezone}
                                 </dd>
                             </div>
                             <div>
-                                <dt className="text-sm text-gray-500">
-                                    Industria
+                                <dt className="text-sm text-sp-muted">
+                                    {t('common.industry')}
                                 </dt>
-                                <dd className="font-medium text-gray-900">
+                                <dd className="font-medium text-sp-ink">
                                     {workspace.industry_category ?? '—'}
                                 </dd>
                             </div>
+                            {workspace.region && (
+                                <div>
+                                    <dt className="text-sm text-sp-muted">
+                                        {t('common.region')}
+                                    </dt>
+                                    <dd className="font-medium text-sp-ink">
+                                        {workspace.region}
+                                    </dd>
+                                </div>
+                            )}
                         </dl>
-                        <div className="mt-6">
-                            <a
+                        <div className="mt-6 flex flex-wrap gap-3">
+                            <Link
                                 href={route(
                                     'workspaces.connections.index',
                                     workspace.id,
                                 )}
-                                className="text-sm font-medium text-indigo-600 hover:underline"
+                                className="inline-flex items-center rounded-lg border border-sp-border px-4 py-2 text-sm font-medium text-sp-ink transition hover:bg-sp-surface"
                             >
-                                Gestionar conexiones Meta / Google →
-                            </a>
+                                {t('workspaces.manage_connections')}
+                            </Link>
                         </div>
-                    </div>
+                    </Card>
 
-                    <div className="overflow-hidden bg-white p-6 shadow-sm sm:rounded-lg">
-                        <h3 className="mb-4 text-lg font-medium text-gray-900">
-                            Miembros asignados
+                    <Card>
+                        <h3 className="mb-4 text-base font-semibold text-sp-ink">
+                            {t('workspaces.assigned_members')}
                         </h3>
                         {workspace.members && workspace.members.length > 0 ? (
-                            <ul className="divide-y divide-gray-200">
+                            <ul className="divide-y divide-sp-border">
                                 {workspace.members.map((member) => (
                                     <li
                                         key={member.id}
                                         className="flex items-center justify-between py-3"
                                     >
                                         <div>
-                                            <p className="font-medium text-gray-900">
+                                            <p className="font-medium text-sp-ink">
                                                 {member.name}
                                             </p>
-                                            <p className="text-sm text-gray-500">
+                                            <p className="text-sm text-sp-muted">
                                                 {member.email}
                                             </p>
                                         </div>
-                                        <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700">
-                                            {member.pivot.role}
-                                        </span>
+                                        <StatusBadge
+                                            status={member.pivot.role}
+                                            label={roleLabel(member.pivot.role)}
+                                        />
                                     </li>
                                 ))}
                             </ul>
                         ) : (
-                            <p className="text-sm text-gray-500">
-                                Sin miembros asignados aún.
-                            </p>
+                            <EmptyState
+                                title={t('workspaces.no_members')}
+                                description={t('workspaces.no_members_hint')}
+                            />
                         )}
-                    </div>
+                    </Card>
 
-                    {canAssignMembers && assignableOperators.length > 0 && (
-                        <div className="overflow-hidden bg-white p-6 shadow-sm sm:rounded-lg">
-                            <h3 className="mb-4 text-lg font-medium text-gray-900">
-                                Asignar operador
+                    {canAssignMembers && (
+                        <Card>
+                            <h3 className="mb-4 text-base font-semibold text-sp-ink">
+                                {t('workspaces.assign_member')}
                             </h3>
                             <form onSubmit={submit} className="space-y-4">
                                 <div>
                                     <InputLabel
                                         htmlFor="email"
-                                        value="Operador"
+                                        value={t('workspaces.member_email')}
                                     />
-                                    <select
+                                    <TextInput
                                         id="email"
-                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        type="email"
+                                        list="assignable-members"
+                                        className="mt-1 block w-full"
                                         value={data.email}
                                         onChange={(e) =>
                                             setData('email', e.target.value)
                                         }
-                                    >
-                                        {assignableOperators.map((operator) => (
-                                            <option
-                                                key={operator.id}
-                                                value={operator.email}
-                                            >
-                                                {operator.name} ({operator.email})
-                                            </option>
-                                        ))}
-                                    </select>
+                                        placeholder="cliente@empresa.com"
+                                        required
+                                    />
+                                    {assignableMembers.length > 0 && (
+                                        <datalist id="assignable-members">
+                                            {assignableMembers.map((member) => (
+                                                <option
+                                                    key={member.id}
+                                                    value={member.email}
+                                                >
+                                                    {member.name}
+                                                </option>
+                                            ))}
+                                        </datalist>
+                                    )}
+                                    <p className="mt-2 text-xs text-sp-muted">
+                                        {t('workspaces.member_email_hint')}
+                                    </p>
                                     <InputError
                                         message={errors.email}
                                         className="mt-2"
@@ -156,10 +244,13 @@ export default function Show({
                                 </div>
 
                                 <div>
-                                    <InputLabel htmlFor="role" value="Rol" />
+                                    <InputLabel
+                                        htmlFor="role"
+                                        value={t('common.role')}
+                                    />
                                     <select
                                         id="role"
-                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        className="sp-input mt-1 block w-full"
                                         value={data.role}
                                         onChange={(e) =>
                                             setData('role', e.target.value)
@@ -180,14 +271,60 @@ export default function Show({
                                     />
                                 </div>
 
+                                {data.role === 'client_readonly' && (
+                                    <label className="flex items-start gap-3 rounded-lg border border-sp-border bg-sp-surface/50 p-4">
+                                        <input
+                                            type="checkbox"
+                                            checked={data.invite}
+                                            onChange={(e) =>
+                                                setData(
+                                                    'invite',
+                                                    e.target.checked,
+                                                )
+                                            }
+                                            className="mt-0.5 rounded border-sp-border text-sp-primary focus:ring-sp-primary"
+                                        />
+                                        <span className="text-sm text-sp-muted">
+                                            {t(
+                                                'workspaces.invite_client_if_missing',
+                                            )}
+                                        </span>
+                                    </label>
+                                )}
+
                                 <PrimaryButton disabled={processing}>
-                                    Asignar
+                                    {t('workspaces.assign')}
                                 </PrimaryButton>
                             </form>
-                        </div>
+                        </Card>
                     )}
                 </div>
-            </div>
-        </AuthenticatedLayout>
+        </WorkspaceLayout>
+    );
+}
+
+function StatCard({
+    label,
+    value,
+    highlight = false,
+}: {
+    label: string;
+    value: number;
+    highlight?: boolean;
+}) {
+    return (
+        <div className="sp-card p-4">
+            <p className="text-xs font-medium uppercase tracking-wide text-sp-muted">
+                {label}
+            </p>
+            <p
+                className={
+                    'mt-1 text-2xl font-semibold ' +
+                    (highlight ? 'text-amber-700' : 'text-sp-ink')
+                }
+            >
+                {value}
+            </p>
+        </div>
     );
 }

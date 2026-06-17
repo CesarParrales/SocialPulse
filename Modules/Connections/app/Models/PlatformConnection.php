@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Modules\Connections\Enums\ConnectionStatus;
+use Modules\Connections\Enums\MetaAuthMode;
 use Modules\Connections\Enums\Platform;
 use Modules\Workspaces\Models\Workspace;
 
@@ -50,8 +51,31 @@ class PlatformConnection extends Model
         $this->update(['status' => ConnectionStatus::Expired]);
     }
 
+    public function isExpiringWithinDays(int $days = 7): bool
+    {
+        return $this->status === ConnectionStatus::Active
+            && $this->token_expires_at !== null
+            && $this->token_expires_at->lte(now()->addDays($days));
+    }
+
     public function markError(): void
     {
         $this->update(['status' => ConnectionStatus::Error]);
+    }
+
+    public function usesMetaSystemUser(): bool
+    {
+        return $this->platform === Platform::Meta
+            && ($this->metadata['auth_mode'] ?? MetaAuthMode::UserOAuth->value) === MetaAuthMode::SystemUser->value;
+    }
+
+    public function metaAuthMode(): MetaAuthMode
+    {
+        if ($this->platform !== Platform::Meta) {
+            return MetaAuthMode::UserOAuth;
+        }
+
+        return MetaAuthMode::tryFrom($this->metadata['auth_mode'] ?? '')
+            ?? MetaAuthMode::UserOAuth;
     }
 }

@@ -5,11 +5,17 @@ namespace Modules\Connections\Services\Meta;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 use Modules\Connections\Enums\AssetType;
+use Modules\Connections\Enums\MetaAuthMode;
 use Modules\Connections\Models\PlatformConnection;
+use Modules\Settings\Services\IntegrationConfigResolver;
 use RuntimeException;
 
 class MetaGraphService
 {
+    public function __construct(
+        private readonly IntegrationConfigResolver $configResolver,
+    ) {}
+
     /**
      * @return Collection<int, array{type: string, id: string, name: string, metadata: array<string, mixed>}>
      */
@@ -21,15 +27,102 @@ class MetaGraphService
             throw new RuntimeException('La conexión Meta no tiene token válido.');
         }
 
+        $agencyId = $this->agencyId($connection);
+
+        if ($this->usesSystemUser($connection)) {
+            return $this->discoverViaSystemUser(
+                $token,
+                $this->businessId($connection, $agencyId),
+                $agencyId,
+            );
+        }
+
+        return $this->discoverViaUserOAuth($token, $agencyId);
+    }
+
+    /**
+     * @return Collection<int, array{type: string, id: string, name: string, metadata: array<string, mixed>}>
+     */
+    private function discoverViaUserOAuth(string $token, ?int $agencyId): Collection
+    {
         $assets = collect();
 
         $pages = Http::timeout(30)
-            ->get($this->graphUrl('me/accounts'), [
+            ->get($this->graphUrl('me/accounts', $agencyId), [
                 'access_token' => $token,
                 'fields' => 'id,name,access_token,instagram_business_account{id,username}',
             ])
             ->throw()
             ->json('data') ?? [];
+
+        $assets = $assets->merge($this->mapPages($pages));
+
+        $adAccounts = Http::timeout(30)
+            ->get($this->graphUrl('me/adaccounts', $agencyId), [
+                'access_token' => $token,
+                'fields' => 'id,name,account_status',
+            ])
+            ->throw()
+            ->json('data') ?? [];
+
+        return $assets->merge($this->mapAdAccounts($adAccounts));
+    }
+
+    /**
+     * @return Collection<int, array{type: string, id: string, name: string, metadata: array<string, mixed>}>
+     */
+    private function discoverViaSystemUser(string $token, string $businessId, ?int $agencyId): Collection
+    {
+        $assets = collect();
+
+        $pages = Http::timeout(30)
+            ->get($this->graphUrl($businessId.'/owned_pages', $agencyId), [
+                'access_token' => $token,
+                'fields' => 'id,name,access_token,instagram_business_account{id,username}',
+            ])
+            ->throw()
+            ->json('data') ?? [];
+
+        if ($pages === []) {
+            $pages = Http::timeout(30)
+                ->get($this->graphUrl($businessId.'/client_pages', $agencyId), [
+                    'access_token' => $token,
+                    'fields' => 'id,name,access_token,instagram_business_account{id,username}',
+                ])
+                ->throw()
+                ->json('data') ?? [];
+        }
+
+        $assets = $assets->merge($this->mapPages($pages));
+
+        $adAccounts = Http::timeout(30)
+            ->get($this->graphUrl($businessId.'/owned_ad_accounts', $agencyId), [
+                'access_token' => $token,
+                'fields' => 'id,name,account_status',
+            ])
+            ->throw()
+            ->json('data') ?? [];
+
+        if ($adAccounts === []) {
+            $adAccounts = Http::timeout(30)
+                ->get($this->graphUrl($businessId.'/client_ad_accounts', $agencyId), [
+                    'access_token' => $token,
+                    'fields' => 'id,name,account_status',
+                ])
+                ->throw()
+                ->json('data') ?? [];
+        }
+
+        return $assets->merge($this->mapAdAccounts($adAccounts));
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $pages
+     * @return Collection<int, array{type: string, id: string, name: string, metadata: array<string, mixed>}>
+     */
+    private function mapPages(array $pages): Collection
+    {
+        $assets = collect();
 
         foreach ($pages as $page) {
             $assets->push([
@@ -55,13 +148,16 @@ class MetaGraphService
             }
         }
 
-        $adAccounts = Http::timeout(30)
-            ->get($this->graphUrl('me/adaccounts'), [
-                'access_token' => $token,
-                'fields' => 'id,name,account_status',
-            ])
-            ->throw()
-            ->json('data') ?? [];
+        return $assets;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $adAccounts
+     * @return Collection<int, array{type: string, id: string, name: string, metadata: array<string, mixed>}>
+     */
+    private function mapAdAccounts(array $adAccounts): Collection
+    {
+        $assets = collect();
 
         foreach ($adAccounts as $account) {
             $assets->push([
@@ -77,9 +173,34 @@ class MetaGraphService
         return $assets;
     }
 
-    private function graphUrl(string $path): string
+    private function usesSystemUser(PlatformConnection $connection): bool
     {
-        $version = config('connections.meta.api_version');
+        return ($connection->metadata['auth_mode'] ?? MetaAuthMode::UserOAuth->value)
+            === MetaAuthMode::SystemUser->value;
+    }
+
+    private function businessId(PlatformConnection $connection, ?int $agencyId): string
+    {
+        $businessId = $connection->metadata['business_id']
+            ?? $this->configResolver->meta($agencyId)['business_id'];
+
+        if (! is_string($businessId) || $businessId === '') {
+            throw new RuntimeException('La conexión Meta System User no tiene business_id.');
+        }
+
+        return $businessId;
+    }
+
+    private function agencyId(PlatformConnection $connection): ?int
+    {
+        $connection->loadMissing('workspace');
+
+        return $connection->workspace?->agency_id;
+    }
+
+    private function graphUrl(string $path, ?int $agencyId): string
+    {
+        $version = $this->configResolver->meta($agencyId)['api_version'];
 
         return 'https://graph.facebook.com/'.$version.'/'.$path;
     }

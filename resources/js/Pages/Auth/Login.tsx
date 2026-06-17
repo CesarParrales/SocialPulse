@@ -3,6 +3,9 @@ import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
+import AuthFormHeader from '@/Components/UI/AuthFormHeader';
+import FlashAlert from '@/Components/UI/FlashAlert';
+import { useTranslation } from '@/lib/i18n';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
@@ -14,6 +17,8 @@ export default function Login({
     status?: string;
     canResetPassword: boolean;
 }) {
+    const { t } = useTranslation();
+
     const { data, setData, post, processing, errors, reset } = useForm({
         email: '',
         password: '',
@@ -30,17 +35,18 @@ export default function Login({
 
     return (
         <GuestLayout>
-            <Head title="Log in" />
+            <Head title={t('auth.login')} />
 
-            {status && (
-                <div className="mb-4 text-sm font-medium text-green-600">
-                    {status}
-                </div>
-            )}
+            <AuthFormHeader
+                title={t('auth.login')}
+                description={t('auth.login_subtitle')}
+            />
+
+            {status && <FlashAlert message={status} className="mb-4" />}
 
             <form onSubmit={submit}>
                 <div>
-                    <InputLabel htmlFor="email" value="Email" />
+                    <InputLabel htmlFor="email" value={t('auth.email')} />
 
                     <TextInput
                         id="email"
@@ -57,7 +63,7 @@ export default function Login({
                 </div>
 
                 <div className="mt-4">
-                    <InputLabel htmlFor="password" value="Password" />
+                    <InputLabel htmlFor="password" value={t('auth.password')} />
 
                     <TextInput
                         id="password"
@@ -84,26 +90,39 @@ export default function Login({
                                 )
                             }
                         />
-                        <span className="ms-2 text-sm text-gray-600">
-                            Remember me
+                        <span className="ms-2 text-sm text-sp-muted">
+                            {t('auth.remember')}
                         </span>
                     </label>
                 </div>
 
-                <div className="mt-4 flex items-center justify-end">
+                <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     {canResetPassword && (
                         <Link
                             href={route('password.request')}
-                            className="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                            className="text-sm text-sp-muted underline hover:text-sp-ink"
                         >
-                            Forgot your password?
+                            {t('auth.forgot_password')}
                         </Link>
                     )}
 
-                    <PrimaryButton className="ms-4" disabled={processing}>
-                        Log in
+                    <PrimaryButton
+                        className="sm:ms-auto"
+                        disabled={processing}
+                    >
+                        {t('auth.login')}
                     </PrimaryButton>
                 </div>
+
+                <p className="mt-6 text-center text-sm text-sp-muted">
+                    {t('auth.no_account')}{' '}
+                    <Link
+                        href={route('register')}
+                        className="font-medium text-sp-primary hover:underline"
+                    >
+                        {t('auth.register')}
+                    </Link>
+                </p>
             </form>
         </GuestLayout>
     );

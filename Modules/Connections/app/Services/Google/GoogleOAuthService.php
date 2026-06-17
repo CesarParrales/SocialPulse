@@ -7,18 +7,23 @@ use Illuminate\Support\Str;
 use Modules\Connections\Enums\ConnectionStatus;
 use Modules\Connections\Enums\Platform;
 use Modules\Connections\Models\PlatformConnection;
+use Modules\Settings\Services\IntegrationConfigResolver;
 use Modules\Workspaces\Models\Workspace;
 use RuntimeException;
 
 class GoogleOAuthService
 {
+    public function __construct(
+        private readonly IntegrationConfigResolver $configResolver,
+    ) {}
+
     public function authorizationUrl(Workspace $workspace, int $userId): string
     {
-        $config = config('connections.google');
+        $config = $this->configResolver->google($workspace->agency_id);
 
         $query = http_build_query([
             'client_id' => $config['client_id'],
-            'redirect_uri' => $this->redirectUri(),
+            'redirect_uri' => $this->redirectUri($config),
             'response_type' => 'code',
             'access_type' => 'offline',
             'prompt' => 'consent',
@@ -48,7 +53,7 @@ class GoogleOAuthService
 
     public function connect(Workspace $workspace, string $code): PlatformConnection
     {
-        $config = config('connections.google');
+        $config = $this->configResolver->google($workspace->agency_id);
 
         $tokens = Http::timeout(30)
             ->asForm()
@@ -56,7 +61,7 @@ class GoogleOAuthService
                 'code' => $code,
                 'client_id' => $config['client_id'],
                 'client_secret' => $config['client_secret'],
-                'redirect_uri' => $this->redirectUri(),
+                'redirect_uri' => $this->redirectUri($config),
                 'grant_type' => 'authorization_code',
             ])
             ->throw()
@@ -89,9 +94,11 @@ class GoogleOAuthService
         ]);
     }
 
-    private function redirectUri(): string
+    /**
+     * @param  array<string, mixed>  $config
+     */
+    private function redirectUri(array $config): string
     {
-        return config('connections.google.redirect_uri')
-            ?? url('/connections/google/callback');
+        return $config['redirect_uri'] ?? url('/connections/google/callback');
     }
 }

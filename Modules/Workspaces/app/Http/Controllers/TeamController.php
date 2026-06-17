@@ -46,9 +46,11 @@ class TeamController extends Controller
             ]),
             'invitations' => $invitations,
             'invitableRoles' => [
-                ['value' => SystemRole::AgencyAdmin->value, 'label' => 'Admin agencia'],
-                ['value' => SystemRole::Operator->value, 'label' => 'Operador'],
+                ['value' => SystemRole::AgencyAdmin->value, 'label' => __('app.flash.team.role_agency_admin')],
+                ['value' => SystemRole::Operator->value, 'label' => __('app.workspaces.member_role_operator')],
+                ['value' => SystemRole::ClientReadonly->value, 'label' => __('app.workspaces.member_role_client')],
             ],
+            'clientInviteHint' => __('app.flash.team.client_invite_hint'),
         ]);
     }
 
@@ -58,7 +60,7 @@ class TeamController extends Controller
 
         if (User::query()->where('email', $request->string('email'))->exists()) {
             return back()->withErrors([
-                'email' => 'Este correo ya tiene una cuenta. Asigna al usuario desde un workspace.',
+                'email' => __('app.flash.team.email_exists'),
             ]);
         }
 
@@ -71,7 +73,7 @@ class TeamController extends Controller
 
         Mail::to($invitation->email)->send(new AgencyInvitationMail($invitation));
 
-        return back()->with('success', 'Invitación enviada.');
+        return back()->with('success', __('app.flash.team.invitation_sent'));
     }
 
     public function destroyInvitation(Request $request, AgencyInvitation $invitation): RedirectResponse
@@ -86,7 +88,7 @@ class TeamController extends Controller
 
         $invitation->delete();
 
-        return back()->with('success', 'Invitación cancelada.');
+        return back()->with('success', __('app.flash.team.invitation_cancelled'));
     }
 
     private function authorizeTeamManagement(Request $request): void

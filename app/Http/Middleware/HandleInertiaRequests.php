@@ -40,12 +40,26 @@ class HandleInertiaRequests extends Middleware
                     'email' => $user->email,
                     'email_verified_at' => $user->email_verified_at,
                     'agency_id' => $user->agency_id,
+                    'locale' => $user->locale ?? 'es',
                     'roles' => $user->getRoleNames()->values()->all(),
+                    'is_client_readonly' => $user->isClientReadonly(),
                 ] : null,
             ],
+            'locale' => fn () => app()->getLocale(),
+            'localeOptions' => [
+                ['value' => 'es', 'label' => 'Español'],
+                ['value' => 'en', 'label' => 'English'],
+            ],
+            'translations' => fn () => trans('app'),
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
             ],
+            'unreadNotificationsCount' => fn () => $user
+                ? $user->unreadNotifications()->count()
+                : 0,
+            'clientHomeUrl' => fn () => $user?->isClientReadonly()
+                ? $user->clientHomeUrl()
+                : null,
         ];
     }
 }

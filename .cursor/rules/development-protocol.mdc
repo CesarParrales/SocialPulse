@@ -7,37 +7,55 @@ alwaysApply: true
 
 ## Fuente de verdad
 
+- **Memoria operativa (L2):** `.cursor/project-memory.md` — gates, punteros y decisiones recientes (no duplica el contexto largo).
 - **PRD:** `socialpulse-prd.md` — alcance MVP, ADRs, modelo de datos, riesgos API.
+- **Contexto técnico:** `context.md` — snapshot del repo (módulos, plataformas, env, comandos).
+- **Agentes IA:** `AGENTS.md` — reglas operativas para asistentes en este repo.
 - Ante conflicto entre código y PRD, **el PRD manda** hasta que se documente un cambio explícito.
 
 ## Regla de skills (obligatoria)
 
 Antes de planificar, implementar, revisar o desplegar, **leer la skill aplicable** (`SKILL.md` + referencias si existen). No improvisar flujos que ya están definidos en una skill.
 
-| Contexto | Skill |
-|----------|-------|
-| SDLC completo, arquitectura, planificación, seguridad, CI/CD, QA, deploy | `software-engineering-sdlc` |
-| Módulos Laravel (nwidart), estructura monolito modular | `laravel-modular` |
-| Código nuevo o refactor (evitar sobre-ingeniería) | `karpathy-guidelines` |
-| UI React/Inertia, componentes, dashboards | `vercel-react-best-practices` |
-| Estructura de componentes (atoms → pages) | `atomic-design` |
-| UX, flujos, accesibilidad, implementación UI | `analisis-ux-implementacion-ui` |
-| Pulido visual, motion, estados | `emil-design-eng` |
-| Revisión de compliance UI (forms, a11y, focus) | `web-interface-guidelines` |
-| Cierre de feature, pre/post deploy, validación producción | `comprobacion-produccion` |
-| Revisión de seguridad explícita (OAuth, tokens, OWASP) | `security-best-practices` |
+| Contexto | Skill (repo) | Skill suite (complemento) |
+|----------|--------------|---------------------------|
+| SDLC completo, arquitectura, planificación, seguridad, CI/CD, QA, deploy | `software-engineering-sdlc` | `devops-base`, `git-workflow` |
+| Módulos Laravel (nwidart), estructura monolito modular | `laravel-modular` | `laravel-backend` |
+| Código nuevo o refactor (evitar sobre-ingeniería) | `karpathy-guidelines` | `problem-solving-dev` |
+| UI React/Inertia, componentes, dashboards | `vercel-react-best-practices` | `react-patterns`, `performance-web` |
+| Estructura de componentes (atoms → pages) | `atomic-design` | `design-system` |
+| UX, flujos, accesibilidad, implementación UI | `analisis-ux-implementacion-ui` | `ux-discovery`, `ui-audit` |
+| Pulido visual, motion, estados | `emil-design-eng` | `ui-web-modern` |
+| Recursos UX free (catálogo, literal vs inspiración) | `ui-web-modern` → `references/learning-sources.md` | `web-interface-guidelines` |
+| Auditoría UI + checklist UXF gratuito | `ui-audit` → `references/ux-principles-free.md` | `analisis-ux-implementacion-ui` |
+| Revisión de compliance UI (forms, a11y, focus) | `web-interface-guidelines` | — |
+| Tests, cobertura, pirámide | *(tests en módulo)* | `testing-strategy` |
+| Cierre de feature, pre/post deploy, validación producción | `comprobacion-produccion` | `monitoring-observability` |
+| Revisión de seguridad explícita (OAuth, tokens, OWASP) | `security-best-practices` | `security-checklist` |
+| Exploración repo grande / dependencias (opt-in) | — | `graphify-integration` |
 
-Todas viven en **`.cursor/skills/<nombre>/`** (versionadas en el repo).
+Skills **del repo** viven en `.cursor/skills/` (prioridad). Skills **suite** pueden estar en el mismo directorio (instaladas) o en `~/.cursor/skills/` si no hay copia local. **No sustituir** skills propias por las de la suite; combinar filas de la tabla cuando aplique.
 
 Si la tarea cruza varias filas, cargar **todas** las skills relevantes (ej. módulo Laravel + dashboard → `laravel-modular` + `vercel-react-best-practices` + `software-engineering-sdlc` fase correspondiente).
 
 ## Flujo mínimo por tarea
 
+0. Leer `.cursor/project-memory.md` (gates y punteros); profundizar en `context.md` / PRD según la fila de fuentes de verdad.
 1. Confirmar alcance contra `socialpulse-prd.md` (P0 vs Fase 2/3).
-2. Leer skill(s) del mapa anterior.
+2. Leer skill(s) del mapa anterior (repo + suite complementaria).
 3. Para SDLC: cargar la referencia de fase en `software-engineering-sdlc/references/` (01–10).
-4. Implementar con diff mínimo; respetar stack del PRD (Laravel 11, Inertia+React, PostgreSQL, Redis, Horizon).
-5. Al terminar un módulo o feature P0: aplicar `comprobacion-produccion`.
+4. Implementar con diff mínimo; respetar stack del PRD y manifests (`composer.json` / `package.json`): Laravel 13, React 19, Inertia 2, PostgreSQL, Redis, Horizon.
+5. **Versiones:** si PRD y código divergen, actualizar PRD o registrar ADR; ver `.cursor/skills/laravel-backend/references/stack-versions.md`.
+6. Al terminar un módulo o feature P0: aplicar `comprobacion-produccion`.
+7. Si cambia arquitectura, plataformas o convenciones operativas: actualizar `context.md` (y `AGENTS.md` si afecta reglas de agentes); registrar la decisión breve en `.cursor/project-memory.md`.
+
+## Recursos UX/UI gratuitos (2026-06-12)
+
+- Catálogo: `.cursor/skills/ui-web-modern/references/learning-sources.md` — uso **literal** (principios, herramientas, 21st.dev) vs **inspiración** (tendencias, prompts IA).
+- Auditoría: `.cursor/skills/ui-audit/references/ux-principles-free.md` — ≥3 checks UXF en scope.
+- Tendencias: `.cursor/skills/ui-web-modern/references/trends-watch.md` — radar con caducidad 90d; **no son verdades**.
+- Prototipos IA (UX Pilot free): solo exploración → gate `ui-audit` antes de implementar.
+- Decisión registrada en `.cursor/project-memory.md` § 2026-06-12.
 
 ## Restricciones del producto (no negociables)
 
@@ -48,6 +66,8 @@ Si la tarea cruza varias filas, cargar **todas** las skills relevantes (ej. mód
 - Sin scraping ni plataformas sin API oficial.
 
 ## Skills instaladas en el repo
+
+**Propias (versionadas como reglas del proyecto):**
 
 ```
 .cursor/skills/
@@ -62,6 +82,8 @@ Si la tarea cruza varias filas, cargar **todas** las skills relevantes (ej. mód
 ├── comprobacion-produccion/
 └── security-best-practices/
 ```
+
+**Suite Dev Studio** (33 skills adicionales vía `install-local.sh --project`): coexisten en el mismo directorio; prioridad local sobre `~/.cursor/skills/`. Ver tabla de complementos arriba.
 
 ## Escalación
 

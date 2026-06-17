@@ -2,11 +2,15 @@ import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
+import AuthFormHeader from '@/Components/UI/AuthFormHeader';
+import { useTranslation } from '@/lib/i18n';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, useForm } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
 
 export default function ConfirmPassword() {
+    const { t } = useTranslation();
+
     const { data, setData, post, processing, errors, reset } = useForm({
         password: '',
     });
@@ -21,16 +25,16 @@ export default function ConfirmPassword() {
 
     return (
         <GuestLayout>
-            <Head title="Confirm Password" />
+            <Head title={t('auth.confirm_title')} />
 
-            <div className="mb-4 text-sm text-gray-600">
-                This is a secure area of the application. Please confirm your
-                password before continuing.
-            </div>
+            <AuthFormHeader
+                title={t('auth.confirm_title')}
+                description={t('auth.confirm_description')}
+            />
 
             <form onSubmit={submit}>
-                <div className="mt-4">
-                    <InputLabel htmlFor="password" value="Password" />
+                <div>
+                    <InputLabel htmlFor="password" value={t('auth.password')} />
 
                     <TextInput
                         id="password"
@@ -45,9 +49,9 @@ export default function ConfirmPassword() {
                     <InputError message={errors.password} className="mt-2" />
                 </div>
 
-                <div className="mt-4 flex items-center justify-end">
-                    <PrimaryButton className="ms-4" disabled={processing}>
-                        Confirm
+                <div className="mt-6 flex justify-end">
+                    <PrimaryButton disabled={processing}>
+                        {t('auth.confirm_button')}
                     </PrimaryButton>
                 </div>
             </form>

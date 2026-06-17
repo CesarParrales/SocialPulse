@@ -13,6 +13,9 @@
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^3.0",
         "nwidart/laravel-modules": "^13.0",
+        "phpoffice/phpspreadsheet": "^5.8",
+        "sentry/sentry-laravel": "^4.25",
+        "spatie/browsershot": "^5.4",
         "spatie/laravel-permission": "^8.0",
         "tightenco/ziggy": "^2.0",
         "wikimedia/composer-merge-plugin": "^2.1"

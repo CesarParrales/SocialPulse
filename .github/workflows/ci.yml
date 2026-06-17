@@ -56,5 +56,11 @@ jobs:
       - name: Run tests
         run: php artisan test
 
+      - name: Smoke test (public routes)
+        run: php artisan socialpulse:smoke
+
+      - name: Integrations config check
+        run: php artisan socialpulse:integrations:check
+
       - name: Lint PHP (Pint)
         run: vendor/bin/pint --test

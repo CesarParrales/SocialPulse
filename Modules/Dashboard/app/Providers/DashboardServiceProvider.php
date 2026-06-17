@@ -2,7 +2,11 @@
 
 namespace Modules\Dashboard\Providers;
 
-use Illuminate\Console\Scheduling\Schedule;
+use Modules\Dashboard\Services\PublicDashboardShareService;
+use Modules\Dashboard\Services\PublicDashboardViewService;
+use Modules\Dashboard\Services\WorkspaceAnalyticsService;
+use Modules\Dashboard\Services\WorkspaceDashboardService;
+use Modules\Dashboard\Services\WorkspaceMetricsAggregator;
 use Nwidart\Modules\Support\ModuleServiceProvider;
 
 class DashboardServiceProvider extends ModuleServiceProvider
@@ -34,13 +38,14 @@ class DashboardServiceProvider extends ModuleServiceProvider
         RouteServiceProvider::class,
     ];
 
-    /**
-     * Define module schedules.
-     *
-     * @param  $schedule
-     */
-    // protected function configureSchedules(Schedule $schedule): void
-    // {
-    //     $schedule->command('inspire')->hourly();
-    // }
+    public function register(): void
+    {
+        parent::register();
+
+        $this->app->singleton(WorkspaceDashboardService::class);
+        $this->app->singleton(WorkspaceAnalyticsService::class);
+        $this->app->singleton(WorkspaceMetricsAggregator::class);
+        $this->app->singleton(PublicDashboardShareService::class);
+        $this->app->singleton(PublicDashboardViewService::class);
+    }
 }

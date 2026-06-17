@@ -12,6 +12,7 @@ class AgencyInvitation extends Model
 {
     protected $fillable = [
         'agency_id',
+        'workspace_id',
         'invited_by',
         'email',
         'role',
@@ -34,6 +35,7 @@ class AgencyInvitation extends Model
         User $invitedBy,
         string $email,
         SystemRole $role,
+        ?Workspace $workspace = null,
     ): self {
         return self::query()->updateOrCreate(
             [
@@ -41,6 +43,7 @@ class AgencyInvitation extends Model
                 'email' => strtolower($email),
             ],
             [
+                'workspace_id' => $workspace?->id,
                 'invited_by' => $invitedBy->id,
                 'role' => $role,
                 'token' => Str::random(64),
@@ -48,6 +51,11 @@ class AgencyInvitation extends Model
                 'expires_at' => now()->addDays(7),
             ],
         );
+    }
+
+    public function workspace(): BelongsTo
+    {
+        return $this->belongsTo(Workspace::class);
     }
 
     public function agency(): BelongsTo

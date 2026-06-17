@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Inertia\Inertia;
 use Inertia\Response;
+use Modules\Workspaces\Enums\WorkspaceMemberRole;
 use Modules\Workspaces\Models\AgencyInvitation;
 
 class InvitationAcceptController extends Controller
@@ -22,7 +23,7 @@ class InvitationAcceptController extends Controller
 
         if ($invitation === null) {
             return redirect()->route('login')->withErrors([
-                'email' => 'Esta invitación no es válida o ha expirado.',
+                'email' => __('app.invitations.invalid_or_expired'),
             ]);
         }
 
@@ -40,7 +41,7 @@ class InvitationAcceptController extends Controller
 
         if ($invitation === null) {
             return redirect()->route('login')->withErrors([
-                'email' => 'Esta invitación no es válida o ha expirado.',
+                'email' => __('app.invitations.invalid_or_expired'),
             ]);
         }
 
@@ -59,11 +60,23 @@ class InvitationAcceptController extends Controller
 
         $user->assignRole($invitation->role->value);
 
+        if ($invitation->workspace_id !== null) {
+            $user->workspaces()->syncWithoutDetaching([
+                $invitation->workspace_id => [
+                    'role' => WorkspaceMemberRole::ClientReadonly->value,
+                ],
+            ]);
+        }
+
         $invitation->update(['accepted_at' => now()]);
 
         event(new Registered($user));
 
         Auth::login($user);
+
+        if ($user->isClientReadonly()) {
+            return redirect()->to($user->clientHomeUrl());
+        }
 
         return redirect()->route('dashboard');
     }

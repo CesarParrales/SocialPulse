@@ -6,5 +6,7 @@
     "Analytics": true,
     "Dashboard": true,
     "Reports": true,
-    "Notifications": true
+    "Notifications": true,
+    "Settings": true,
+    "Content": true
 }

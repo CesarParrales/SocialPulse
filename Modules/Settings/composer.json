@@ -1,0 +1,22 @@
+{
+    "name": "nwidart/settings",
+    "description": "",
+    "authors": [],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {}
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Settings\\": "app/",
+            "Modules\\Settings\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\Settings\\Tests\\": "tests/"
+        }
+    }
+}

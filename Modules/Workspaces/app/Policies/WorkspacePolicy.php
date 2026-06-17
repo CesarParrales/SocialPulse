@@ -29,4 +29,24 @@ class WorkspacePolicy
         return $user->isSuperAdmin()
             || ($user->isAgencyAdmin() && $user->agency_id === $workspace->agency_id);
     }
+
+    public function update(User $user, Workspace $workspace): bool
+    {
+        return $user->isSuperAdmin()
+            || ($user->isAgencyAdmin() && $user->agency_id === $workspace->agency_id);
+    }
+
+    public function customizeDashboard(User $user, Workspace $workspace): bool
+    {
+        if (! $user->canAccessWorkspace($workspace)) {
+            return false;
+        }
+
+        return ! $user->isClientReadonly();
+    }
+
+    public function managePublicDashboard(User $user, Workspace $workspace): bool
+    {
+        return $this->update($user, $workspace);
+    }
 }

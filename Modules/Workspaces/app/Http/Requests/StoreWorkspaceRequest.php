@@ -20,6 +20,7 @@ class StoreWorkspaceRequest extends FormRequest
         $rules = [
             'name' => ['required', 'string', 'max:255'],
             'industry_category' => ['nullable', 'string', 'max:100'],
+            'region' => ['nullable', 'string', 'max:100'],
             'timezone' => ['required', 'string', 'timezone:all'],
         ];
 

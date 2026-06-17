@@ -1,6 +1,10 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import Card from '@/Components/UI/Card';
+import FlashAlert from '@/Components/UI/FlashAlert';
+import PageHeader from '@/Components/UI/PageHeader';
+import { useTranslation } from '@/lib/i18n';
 import { PageProps } from '@/types';
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import DeleteUserForm from './Partials/DeleteUserForm';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm';
@@ -9,34 +13,39 @@ export default function Edit({
     mustVerifyEmail,
     status,
 }: PageProps<{ mustVerifyEmail: boolean; status?: string }>) {
+    const { t } = useTranslation();
+    const { flash } = usePage().props;
+
     return (
-        <AuthenticatedLayout
-            header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                    Profile
-                </h2>
-            }
-        >
-            <Head title="Profile" />
+        <AuthenticatedLayout>
+            <Head title={t('profile.title')} />
 
-            <div className="py-12">
-                <div className="mx-auto max-w-7xl space-y-6 sm:px-6 lg:px-8">
-                    <div className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
-                        <UpdateProfileInformationForm
-                            mustVerifyEmail={mustVerifyEmail}
-                            status={status}
-                            className="max-w-xl"
-                        />
-                    </div>
+            <div className="mx-auto max-w-3xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
+                <PageHeader
+                    title={t('profile.title')}
+                    description={t('profile.description')}
+                />
 
-                    <div className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
-                        <UpdatePasswordForm className="max-w-xl" />
-                    </div>
+                {flash.success && <FlashAlert message={flash.success} />}
 
-                    <div className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
-                        <DeleteUserForm className="max-w-xl" />
-                    </div>
-                </div>
+                {status === 'verification-link-sent' && (
+                    <FlashAlert message={t('profile.verification_sent')} />
+                )}
+
+                <Card>
+                    <UpdateProfileInformationForm
+                        mustVerifyEmail={mustVerifyEmail}
+                        status={status}
+                    />
+                </Card>
+
+                <Card>
+                    <UpdatePasswordForm />
+                </Card>
+
+                <Card className="border-red-200 bg-red-50/30">
+                    <DeleteUserForm />
+                </Card>
             </div>
         </AuthenticatedLayout>
     );

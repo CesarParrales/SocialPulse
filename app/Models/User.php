@@ -16,7 +16,7 @@ use Modules\Workspaces\Models\Agency;
 use Modules\Workspaces\Models\Workspace;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['name', 'email', 'password', 'agency_id'])]
+#[Fillable(['name', 'email', 'password', 'agency_id', 'locale'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -51,6 +51,34 @@ class User extends Authenticatable
     public function isAgencyAdmin(): bool
     {
         return $this->hasRole(SystemRole::AgencyAdmin->value);
+    }
+
+    public function isClientReadonly(): bool
+    {
+        return $this->hasRole(SystemRole::ClientReadonly->value);
+    }
+
+    public function isWorkspaceClient(Workspace $workspace): bool
+    {
+        if ($this->isClientReadonly()) {
+            return true;
+        }
+
+        return $this->workspaceMemberRole($workspace) === WorkspaceMemberRole::ClientReadonly;
+    }
+
+    public function clientHomeUrl(): string
+    {
+        $workspace = Workspace::query()
+            ->accessibleBy($this)
+            ->orderBy('name')
+            ->first();
+
+        if ($workspace !== null) {
+            return route('workspaces.dashboard', $workspace);
+        }
+
+        return route('workspaces.index');
     }
 
     public function canAccessWorkspace(Workspace $workspace): bool

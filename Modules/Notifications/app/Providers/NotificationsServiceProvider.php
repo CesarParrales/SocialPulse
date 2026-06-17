@@ -3,6 +3,7 @@
 namespace Modules\Notifications\Providers;
 
 use Illuminate\Console\Scheduling\Schedule;
+use Modules\Notifications\Jobs\DispatchTokenExpiryWarningsJob;
 use Nwidart\Modules\Support\ModuleServiceProvider;
 
 class NotificationsServiceProvider extends ModuleServiceProvider
@@ -34,13 +35,12 @@ class NotificationsServiceProvider extends ModuleServiceProvider
         RouteServiceProvider::class,
     ];
 
-    /**
-     * Define module schedules.
-     *
-     * @param  $schedule
-     */
-    // protected function configureSchedules(Schedule $schedule): void
-    // {
-    //     $schedule->command('inspire')->hourly();
-    // }
+    protected function configureSchedules(Schedule $schedule): void
+    {
+        $schedule->job(new DispatchTokenExpiryWarningsJob)
+            ->dailyAt('06:00')
+            ->timezone('UTC')
+            ->name('notifications:token-expiry-warnings')
+            ->withoutOverlapping();
+    }
 }
